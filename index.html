@@ -6,45 +6,47 @@
   <title>Service Appointment Booking</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #f0f2f5; margin: 0; padding: 16px; color: #1c1e21; }
-    .card { max-width: 480px; margin: 10px auto; background: #ffffff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-    h2 { margin: 0 0 16px 0; font-size: 1.3rem; color: #004b93; text-align: center; }
-    label { font-weight: 600; font-size: 0.85rem; display: block; margin-top: 14px; margin-bottom: 6px; color: #333; }
-    input, select { width: 100%; padding: 11px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 0.95rem; background: #fff; }
+    body { background: #f0f2f5; margin: 0; padding: 14px; color: #1c1e21; }
+    .card { max-width: 480px; margin: 10px auto; background: #ffffff; padding: 22px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    h2 { margin: 0 0 16px 0; font-size: 1.25rem; color: #004b93; text-align: center; }
+    label { font-weight: 600; font-size: 0.82rem; display: block; margin-top: 14px; margin-bottom: 5px; color: #333; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 0.92rem; background: #fff; }
     input:focus, select:focus { border-color: #004b93; outline: none; }
-    .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
-    .slot-btn { background: #e7f0fa; border: 1px solid #004b93; color: #004b93; padding: 10px 4px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 600; text-align: center; }
+    .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; max-height: 220px; overflow-y: auto; padding: 4px; border: 1px solid #eee; border-radius: 6px; }
+    .slot-btn { background: #e7f0fa; border: 1px solid #004b93; color: #004b93; padding: 8px 2px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600; text-align: center; }
     .slot-btn.selected { background: #004b93; color: #ffffff; }
-    .submit-btn { width: 100%; background: #008a3e; color: #ffffff; border: none; padding: 13px; border-radius: 6px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 22px; }
+    .submit-btn { width: 100%; background: #008a3e; color: #ffffff; border: none; padding: 12px; border-radius: 6px; font-size: 0.98rem; font-weight: 700; cursor: pointer; margin-top: 20px; }
     .submit-btn:disabled { background: #a8a8a8; cursor: not-allowed; }
-    #status { margin-top: 14px; text-align: center; font-size: 0.9rem; }
-    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #ccd0d5; border-top-color: #004b93; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
+    .cancel-btn { background: #c62828 !important; }
+    #status { margin-top: 12px; text-align: center; font-size: 0.88rem; }
+    .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid #ccd0d5; border-top-color: #004b93; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" id="mainCard">
     <h2>Book Vehicle Service</h2>
     
-    <label for="serviceCenter">Select Service Center</label>
-    <select id="serviceCenter" required>
+    <label for="serviceCenter">1. Select Service Center</label>
+    <select id="serviceCenter" onchange="loadSlots()">
       <option value="">-- Choose Branch --</option>
       <option value="Dr. A S Rao Nagar">Dr. A S Rao Nagar</option>
       <option value="Moula-Ali">Moula-Ali</option>
       <option value="Nagaram">Nagaram</option>
+      <option value="Keesara">Keesara</option>
     </select>
 
-    <label for="bookingDate">Select Date</label>
+    <label for="bookingDate">2. Select Date</label>
     <input type="date" id="bookingDate" onchange="loadSlots()">
 
     <div id="slotsSection" style="display:none;">
-      <label>Choose Available Time Slot</label>
+      <label>3. Select 15-Minute Time Slot</label>
       <div id="slotContainer" class="slot-grid"></div>
     </div>
 
     <div id="detailsSection" style="display:none;">
       <label for="custName">Customer Name</label>
-      <input type="text" id="custName" placeholder="Enter your full name" required>
+      <input type="text" id="custName" placeholder="Full name" required>
 
       <label for="custPhone">Mobile Number</label>
       <input type="tel" id="custPhone" placeholder="10-digit mobile number" required>
@@ -65,42 +67,118 @@
   </div>
 
   <script>
-    // Paste your Google Apps Script Web App URL below
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1vAtGC_-S7nQYjE5t8UQKiksu28KJnK5S57YR-z3lSUXmKm-ifaukob46rjj0j1_y/exec";
+    // 1. Paste your exact Google Apps Script Web App URL below:
+    const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
     let selectedSlot = null;
 
-    window.onload = function() {
+    // 2. Route between normal booking and cancellation on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isCancel = urlParams.get('cancel');
+      const eventId = urlParams.get('eventId');
+      const branch = urlParams.get('branch');
+
+      if (isCancel === 'true' && eventId) {
+        showCancelScreen(eventId, branch);
+      } else {
+        initBookingForm();
+      }
+    });
+
+    function initBookingForm() {
       const today = new Date().toISOString().split('T')[0];
       const dateInput = document.getElementById('bookingDate');
       dateInput.min = today;
       dateInput.value = today;
-      loadSlots();
-    };
+    }
 
+    // Displays the Cancellation Confirmation View
+    function showCancelScreen(eventId, branch) {
+      const card = document.getElementById('mainCard');
+      card.innerHTML = `
+        <div style="text-align: center; padding: 10px 0;">
+          <h2 style="color: #c62828;">Cancel Service Appointment</h2>
+          <p style="font-size: 0.95rem; color: #444;">Are you sure you want to cancel your scheduled appointment at <b>${branch || 'our workshop'}</b>?</p>
+          <p style="font-size: 0.85rem; color: #777;">This will release your time slot for other customers.</p>
+          <button id="confirmCancelBtn" class="submit-btn cancel-btn" onclick="executeCancellation('${eventId}', '${branch}')">
+            Confirm & Cancel Appointment
+          </button>
+          <div id="cancelStatus" style="margin-top: 14px; font-size: 0.9rem;"></div>
+        </div>
+      `;
+    }
+
+    // Sends the cancellation request to Google Apps Script
+    function executeCancellation(eventId, branch) {
+      const btn = document.getElementById('confirmCancelBtn');
+      const status = document.getElementById('cancelStatus');
+      btn.disabled = true;
+      status.innerHTML = '<span class="spinner"></span> Releasing slot and updating records...';
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
+        body: JSON.stringify({
+          action: "cancelBooking",
+          eventId: eventId,
+          branch: branch
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          document.getElementById('mainCard').innerHTML = `
+            <div style="text-align: center; padding: 16px 0;">
+              <h2 style="color: #008a3e;">Appointment Cancelled</h2>
+              <p>Your service appointment has been cancelled.</p>
+              <p style="font-size: 0.85rem; color: #555;">The calendar event has been deleted and the time slot is reopened.</p>
+              <a href="${window.location.origin + window.location.pathname}" style="display:inline-block; margin-top:16px; color:#004b93; font-weight:700; text-decoration:none;">Book a New Appointment →</a>
+            </div>
+          `;
+        } else {
+          status.innerHTML = '<span style="color:#c62828">Error: ' + res.message + '</span>';
+          btn.disabled = false;
+        }
+      })
+      .catch(err => {
+        status.innerHTML = '<span style="color:#c62828">Failed to cancel: ' + err.message + '</span>';
+        btn.disabled = false;
+      });
+    }
+
+    // Normal Slot Loading
     function loadSlots() {
+      const branch = document.getElementById('serviceCenter').value;
       const dateVal = document.getElementById('bookingDate').value;
-      if (!dateVal) return;
-
       const container = document.getElementById('slotContainer');
       const status = document.getElementById('status');
       const slotsSection = document.getElementById('slotsSection');
       const detailsSection = document.getElementById('detailsSection');
 
+      if (!branch || !dateVal) {
+        slotsSection.style.display = 'none';
+        detailsSection.style.display = 'none';
+        return;
+      }
+
       slotsSection.style.display = 'block';
       detailsSection.style.display = 'none';
       selectedSlot = null;
       container.innerHTML = '';
-      status.innerHTML = '<span class="spinner"></span> Checking available slots...';
+      status.innerHTML = '<span class="spinner"></span> Loading slots for ' + branch + '...';
 
       fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: "getSlots", dateString: dateVal })
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
+        body: JSON.stringify({ action: "getSlots", dateString: dateVal, branch: branch })
       })
       .then(res => res.json())
       .then(res => {
         status.innerHTML = '';
         if (!res.success || !res.slots || res.slots.length === 0) {
-          container.innerHTML = '<div style="grid-column: span 3; color: #c62828; font-size: 0.88rem; text-align: center;">No slots available on this date.</div>';
+          container.innerHTML = '<div style="grid-column: span 4; color: #c62828; font-size: 0.85rem; text-align: center; padding: 8px;">No slots available on this date.</div>';
           return;
         }
         res.slots.forEach(slot => {
@@ -121,6 +199,7 @@
       });
     }
 
+    // Booking Submission
     function submitBooking() {
       const branch = document.getElementById('serviceCenter').value;
       const name = document.getElementById('custName').value.trim();
@@ -132,9 +211,10 @@
       const status = document.getElementById('status');
       const btn = document.getElementById('submitBtn');
 
-      if (!branch) { alert('Please select a Service Center branch.'); return; }
-      if (!name || !phone || !email || !vehicle || !regNo) { alert('Please fill in all details.'); return; }
-      if (!selectedSlot) { alert('Please select a time slot.'); return; }
+      if (!branch || !name || !phone || !email || !vehicle || !regNo || !selectedSlot) {
+        alert('Please fill in all details and pick a slot.');
+        return;
+      }
 
       btn.disabled = true;
       status.innerHTML = '<span class="spinner"></span> Confirming your booking & generating invite...';
@@ -154,19 +234,28 @@
 
       fetch(SCRIPT_URL, {
         method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
         body: JSON.stringify({ action: "bookSlot", bookingData: payload })
       })
       .then(res => res.json())
       .then(res => {
         if (res.success) {
-          document.querySelector('.card').innerHTML = `
+          document.getElementById('mainCard').innerHTML = `
             <div style="text-align: center; padding: 12px 0;">
-              <h2 style="color: #008a3e; margin-bottom: 10px;">✓ Appointment Confirmed!</h2>
+              <h2 style="color: #008a3e; margin-bottom: 8px;">✓ Appointment Confirmed!</h2>
+              <div style="background: #e8f5e9; border: 1px dashed #2e7d32; border-radius: 8px; padding: 10px; margin: 12px 0;">
+                <span style="font-size: 0.8rem; color: #555; text-transform: uppercase; letter-spacing: 1px;">Booking ID</span>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #1b5e20;">${res.bookingId}</div>
+              </div>
               <p>Thank you, <b>${name}</b>.</p>
               <p><b>Vehicle:</b> ${vehicle} (${regNo})</p>
-              <p><b>Branch:</b> ${branch}</p>
-              <p><b>Scheduled:</b> ${dateVal} at ${selectedSlot.timeString}</p>
-              <p style="font-size: 0.85rem; color: #555; margin-top: 14px;">A Google Calendar invitation has been sent to <b>${email}</b>.</p>
+              <p><b>Service Center:</b> ${branch}</p>
+              <p><b>Slot:</b> ${dateVal} at ${selectedSlot.timeString} (15 mins)</p>
+              <p style="font-size: 0.85rem; color: #555; margin-top: 12px;">A Google Calendar invitation has been sent to <b>${email}</b>.</p>
+              <hr style="border:0; border-top:1px solid #eee; margin:16px 0;">
+              <p style="font-size: 0.8rem; color: #777;">Need to cancel this booking?</p>
+              <a href="${res.cancelUrl}" style="font-size: 0.85rem; color: #c62828; font-weight: 700;">Cancel Appointment</a>
             </div>`;
         } else {
           status.innerHTML = '<span style="color:#c62828">Error: ' + res.message + '</span>';
