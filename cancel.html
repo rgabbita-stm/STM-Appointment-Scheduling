@@ -3,61 +3,121 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cancel Appointment</title>
+  <title>Cancel Service Appointment</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: #f0f2f5; margin: 0; padding: 16px; color: #1c1e21; }
     .card { max-width: 440px; margin: 30px auto; background: #ffffff; padding: 26px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); text-align: center; }
-    h2 { margin: 0 0 12px 0; font-size: 1.3rem; color: #c62828; }
+    h2 { margin: 0 0 12px 0; font-size: 1.3rem; }
     p { font-size: 0.95rem; color: #444; line-height: 1.5; margin: 8px 0 16px; }
     .btn { width: 100%; border: none; padding: 13px; border-radius: 6px; font-size: 1rem; font-weight: 700; cursor: pointer; }
     .cancel-btn { background: #c62828; color: #ffffff; }
     .cancel-btn:disabled { background: #bbb; cursor: not-allowed; }
-    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #status { margin-top: 14px; font-size: 0.9rem; }
+    #status { margin-top: 14px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; }
     .branch-tag { display: inline-block; background: #ffebee; color: #c62828; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; margin-bottom: 12px; }
+    .info-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 12px; margin: 12px 0; text-align: left; font-size: 0.9rem; }
+    .info-box div { margin-bottom: 6px; }
+    .info-box div:last-child { margin-bottom: 0; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #666; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <div class="card" id="cancelCard">
-    <h2>Cancel Appointment</h2>
-    <div id="branchDisplay" class="branch-tag" style="display:none;"></div>
-    <p>Are you sure you want to cancel this service appointment?</p>
-    <p style="font-size: 0.85rem; color: #666;">Once cancelled, your reserved slot will be released for other customers.</p>
-    
-    <button id="cancelButton" class="btn cancel-btn" onclick="confirmCancel()">Yes, Cancel My Appointment</button>
-    <div id="status"></div>
+    <div id="loadingState">
+      <p><span class="spinner"></span> Checking appointment status...</p>
+    </div>
   </div>
 
   <script>
-    // Paste your Google Apps Script Web App URL below
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1vAtGC_-S7nQYjE5t8UQKiksu28KJnK5S57YR-z3lSUXmKm-ifaukob46rjj0j1_y/exec";
+    // =========================================================================
+    // Paste your Google Apps Script Web App URL ending in /exec below:
+    // =========================================================================
+    const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get('eventId');
     const branch = urlParams.get('branch');
 
     window.onload = function() {
+      const card = document.getElementById('cancelCard');
+
       if (!eventId) {
-        document.getElementById('cancelCard').innerHTML = `
+        card.innerHTML = `
           <h2 style="color: #666;">Invalid Link</h2>
-          <p>No appointment ID was found in this link. It may have already been cancelled or expired.</p>
+          <p>No appointment ID was found in this link. It may have expired or was incorrectly formatted.</p>
+          <a href="index.html" style="color: #004b93; font-weight: 700; text-decoration: none;">Go to Booking Page →</a>
         `;
         return;
       }
-      if (branch) {
-        const branchTag = document.getElementById('branchDisplay');
-        branchTag.innerText = "Branch: " + branch;
-        branchTag.style.display = 'inline-block';
-      }
+
+      // Step 1: Query Sheet for live booking status
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
+        body: JSON.stringify({ action: "checkStatus", eventId: eventId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          card.innerHTML = `
+            <h2 style="color: #666;">Booking Not Found</h2>
+            <p>${data.message || 'This appointment record could not be found in our database.'}</p>
+            <a href="index.html" style="color: #004b93; font-weight: 700; text-decoration: none;">Go to Booking Page →</a>
+          `;
+          return;
+        }
+
+        // Step 2: Prevent double cancellation
+        if (data.status === "Cancelled") {
+          card.innerHTML = `
+            <div style="padding: 8px 0;">
+              <h2 style="color: #c62828;">Already Cancelled</h2>
+              <p>This appointment has <b>already been cancelled</b>.</p>
+              <div class="info-box">
+                <div><b>Booking ID:</b> ${data.bookingId}</div>
+                <div><b>Vehicle:</b> ${data.vehicleNo}</div>
+                <div><b>Slot:</b> ${data.slot}</div>
+              </div>
+              <p style="font-size: 0.85rem; color: #666;">The calendar slot is already released and available to other customers.</p>
+              <a href="index.html" style="display:inline-block; margin-top: 14px; color: #004b93; font-weight: 700; text-decoration: none;">Book a New Appointment →</a>
+            </div>
+          `;
+          return;
+        }
+
+        // Step 3: Active booking — Render confirmation view
+        card.innerHTML = `
+          <h2 style="color: #c62828;">Cancel Service Appointment</h2>
+          <div class="branch-tag">Branch: ${branch || 'Workshop'}</div>
+          
+          <div class="info-box">
+            <div><b>Booking ID:</b> ${data.bookingId}</div>
+            <div><b>Customer:</b> ${data.customerName}</div>
+            <div><b>Vehicle:</b> ${data.vehicleNo}</div>
+            <div><b>Scheduled:</b> ${data.slot}</div>
+          </div>
+
+          <p style="font-size: 0.85rem; color: #666;">Are you sure? Releasing your slot makes it immediately open for others.</p>
+          <button id="cancelButton" class="btn cancel-btn" onclick="confirmCancel()">Yes, Cancel My Appointment</button>
+          <div id="status"></div>
+        `;
+      })
+      .catch(err => {
+        card.innerHTML = `
+          <h2 style="color: #c62828;">Connection Error</h2>
+          <p>Unable to verify appointment status. Please check your network connection.</p>
+        `;
+      });
     };
 
+    // Step 4: Perform cancellation
     function confirmCancel() {
       const btn = document.getElementById('cancelButton');
       const status = document.getElementById('status');
       btn.disabled = true;
-      status.innerHTML = '<span style="color:#666;">Processing cancellation with calendar...</span>';
+      status.innerHTML = '<span class="spinner"></span> Releasing slot and updating records...';
 
       fetch(SCRIPT_URL, {
         method: 'POST',
@@ -73,20 +133,20 @@
       .then(data => {
         if (data.success) {
           document.getElementById('cancelCard').innerHTML = `
-            <div style="padding: 10px 0;">
+            <div style="padding: 8px 0;">
               <h2 style="color: #008a3e;">✓ Appointment Cancelled</h2>
-              <p>Your appointment has been cancelled and the slot has been freed on our calendar.</p>
-              <p style="font-size: 0.85rem; color: #555;">Thank you for notifying us.</p>
+              <p>Your appointment has been successfully cancelled</p>
+              <p style="font-size: 0.85rem; color: #555;">Thank you for letting us know.</p>
               <a href="index.html" style="display:inline-block; margin-top: 14px; color: #004b93; font-weight: 700; text-decoration: none;">Book a New Appointment →</a>
             </div>
           `;
         } else {
-          status.innerHTML = '<span style="color:#c62828">Error: ' + data.message + '</span>';
+          status.innerHTML = '<span style="color:#c62828; font-weight:bold;">' + data.message + '</span>';
           btn.disabled = false;
         }
       })
       .catch(err => {
-        status.innerHTML = '<span style="color:#c62828">Cancellation failed: ' + err.message + '</span>';
+        status.innerHTML = '<span style="color:#c62828; font-weight:bold;">Failed to connect to server: ' + err.message + '</span>';
         btn.disabled = false;
       });
     }
