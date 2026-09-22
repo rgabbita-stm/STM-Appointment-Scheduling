@@ -17,7 +17,6 @@
     .slot-btn.selected { background: #004b93; color: #ffffff; }
     .submit-btn { width: 100%; background: #008a3e; color: #ffffff; border: none; padding: 12px; border-radius: 6px; font-size: 0.98rem; font-weight: 700; cursor: pointer; margin-top: 20px; }
     .submit-btn:disabled { background: #a8a8a8; cursor: not-allowed; }
-    .cancel-btn { background: #c62828 !important; }
     #status { margin-top: 12px; text-align: center; font-size: 0.88rem; }
     .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid #ccd0d5; border-top-color: #004b93; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -28,7 +27,7 @@
     <h2>Book Vehicle Service</h2>
     
     <label for="serviceCenter">1. Select Service Center</label>
-    <select id="serviceCenter" onchange="loadSlots()">
+    <select id="serviceCenter" onchange="fetchAvailableSlots()">
       <option value="">-- Choose Branch --</option>
       <option value="Dr. A S Rao Nagar">Dr. A S Rao Nagar</option>
       <option value="Moula-Ali">Moula-Ali</option>
@@ -37,7 +36,7 @@
     </select>
 
     <label for="bookingDate">2. Select Date</label>
-    <input type="date" id="bookingDate" onchange="loadSlots()">
+    <input type="date" id="bookingDate" onchange="fetchAvailableSlots()">
 
     <div id="slotsSection" style="display:none;">
       <label>3. Select 15-Minute Time Slot</label>
@@ -67,88 +66,21 @@
   </div>
 
   <script>
-    // 1. Paste your exact Google Apps Script Web App URL below:
-    const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
+    // PASTE YOUR GOOGLE APPS SCRIPT EXEC URL HERE
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1vAtGC_-S7nQYjE5t8UQKiksu28KJnK5S57YR-z3lSUXmKm-ifaukob46rjj0j1_y/exec";
+
     let selectedSlot = null;
 
-    // 2. Route between normal booking and cancellation on page load
+    // Set today's date in date picker on load (does NOT trigger any network request)
     window.addEventListener('DOMContentLoaded', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isCancel = urlParams.get('cancel');
-      const eventId = urlParams.get('eventId');
-      const branch = urlParams.get('branch');
-
-      if (isCancel === 'true' && eventId) {
-        showCancelScreen(eventId, branch);
-      } else {
-        initBookingForm();
-      }
-    });
-
-    function initBookingForm() {
       const today = new Date().toISOString().split('T')[0];
       const dateInput = document.getElementById('bookingDate');
       dateInput.min = today;
       dateInput.value = today;
-    }
+    });
 
-    // Displays the Cancellation Confirmation View
-    function showCancelScreen(eventId, branch) {
-      const card = document.getElementById('mainCard');
-      card.innerHTML = `
-        <div style="text-align: center; padding: 10px 0;">
-          <h2 style="color: #c62828;">Cancel Service Appointment</h2>
-          <p style="font-size: 0.95rem; color: #444;">Are you sure you want to cancel your scheduled appointment at <b>${branch || 'our workshop'}</b>?</p>
-          <p style="font-size: 0.85rem; color: #777;">This will release your time slot for other customers.</p>
-          <button id="confirmCancelBtn" class="submit-btn cancel-btn" onclick="executeCancellation('${eventId}', '${branch}')">
-            Confirm & Cancel Appointment
-          </button>
-          <div id="cancelStatus" style="margin-top: 14px; font-size: 0.9rem;"></div>
-        </div>
-      `;
-    }
-
-    // Sends the cancellation request to Google Apps Script
-    function executeCancellation(eventId, branch) {
-      const btn = document.getElementById('confirmCancelBtn');
-      const status = document.getElementById('cancelStatus');
-      btn.disabled = true;
-      status.innerHTML = '<span class="spinner"></span> Releasing slot and updating records...';
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        redirect: 'follow',
-        body: JSON.stringify({
-          action: "cancelBooking",
-          eventId: eventId,
-          branch: branch
-        })
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          document.getElementById('mainCard').innerHTML = `
-            <div style="text-align: center; padding: 16px 0;">
-              <h2 style="color: #008a3e;">Appointment Cancelled</h2>
-              <p>Your service appointment has been cancelled.</p>
-              <p style="font-size: 0.85rem; color: #555;">The calendar event has been deleted and the time slot is reopened.</p>
-              <a href="${window.location.origin + window.location.pathname}" style="display:inline-block; margin-top:16px; color:#004b93; font-weight:700; text-decoration:none;">Book a New Appointment →</a>
-            </div>
-          `;
-        } else {
-          status.innerHTML = '<span style="color:#c62828">Error: ' + res.message + '</span>';
-          btn.disabled = false;
-        }
-      })
-      .catch(err => {
-        status.innerHTML = '<span style="color:#c62828">Failed to cancel: ' + err.message + '</span>';
-        btn.disabled = false;
-      });
-    }
-
-    // Normal Slot Loading
-    function loadSlots() {
+    // Fetches slots ONLY when both Branch and Date are chosen
+    function fetchAvailableSlots() {
       const branch = document.getElementById('serviceCenter').value;
       const dateVal = document.getElementById('bookingDate').value;
       const container = document.getElementById('slotContainer');
@@ -156,9 +88,11 @@
       const slotsSection = document.getElementById('slotsSection');
       const detailsSection = document.getElementById('detailsSection');
 
+      // Do nothing until both are selected
       if (!branch || !dateVal) {
         slotsSection.style.display = 'none';
         detailsSection.style.display = 'none';
+        status.innerHTML = '';
         return;
       }
 
@@ -166,7 +100,7 @@
       detailsSection.style.display = 'none';
       selectedSlot = null;
       container.innerHTML = '';
-      status.innerHTML = '<span class="spinner"></span> Loading slots for ' + branch + '...';
+      status.innerHTML = '<span class="spinner"></span> Checking availability for ' + branch + '...';
 
       fetch(SCRIPT_URL, {
         method: 'POST',
@@ -174,32 +108,42 @@
         redirect: 'follow',
         body: JSON.stringify({ action: "getSlots", dateString: dateVal, branch: branch })
       })
-      .then(res => res.json())
-      .then(res => {
-        status.innerHTML = '';
-        if (!res.success || !res.slots || res.slots.length === 0) {
-          container.innerHTML = '<div style="grid-column: span 4; color: #c62828; font-size: 0.85rem; text-align: center; padding: 8px;">No slots available on this date.</div>';
-          return;
+      .then(res => res.text())
+      .then(text => {
+        // Safe parse check
+        try {
+          const res = JSON.parse(text);
+          status.innerHTML = '';
+
+          if (!res.success || !res.slots || res.slots.length === 0) {
+            container.innerHTML = '<div style="grid-column: span 4; color: #c62828; font-size: 0.85rem; text-align: center; padding: 8px;">No slots available on this date.</div>';
+            return;
+          }
+
+          res.slots.forEach(slot => {
+            const btn = document.createElement('div');
+            btn.className = 'slot-btn';
+            btn.innerText = slot.timeString;
+            btn.onclick = function() {
+              document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              selectedSlot = slot;
+              detailsSection.style.display = 'block';
+            };
+            container.appendChild(btn);
+          });
+        } catch (e) {
+          // If Google still sends HTML instead of JSON, print the readable error
+          status.innerHTML = '<span style="color:#c62828">Backend error. Please verify Apps Script deployment permissions.</span>';
+          console.error("Non-JSON output from backend:", text);
         }
-        res.slots.forEach(slot => {
-          const btn = document.createElement('div');
-          btn.className = 'slot-btn';
-          btn.innerText = slot.timeString;
-          btn.onclick = function() {
-            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedSlot = slot;
-            detailsSection.style.display = 'block';
-          };
-          container.appendChild(btn);
-        });
       })
       .catch(err => {
-        status.innerHTML = '<span style="color:#c62828">Error loading slots: ' + err.message + '</span>';
+        status.innerHTML = '<span style="color:#c62828">Network error: ' + err.message + '</span>';
       });
     }
 
-    // Booking Submission
+    // Handles form submission
     function submitBooking() {
       const branch = document.getElementById('serviceCenter').value;
       const name = document.getElementById('custName').value.trim();
