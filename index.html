@@ -24,10 +24,55 @@
     #status { margin-top: 12px; text-align: center; font-size: 0.88rem; }
     .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid #ccd0d5; border-top-color: #004b93; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+	/* Dealership Header Styling */
+	.brand-header {
+	  display: flex;
+	  flex-direction: column;
+	  align-items: center;
+	  justify-content: center;
+	  text-align: center;
+	  margin-bottom: 24px;
+	  padding-bottom: 18px;
+	  border-bottom: 1px solid #e5e7eb;
+	}
+
+	.brand-logo {
+	  height: 60px;
+	  width: auto;
+	  max-width: 180px;
+	  object-fit: contain;
+	  margin-bottom: 10px;
+	}
+
+	.dealership-name {
+	  margin: 0;
+	  font-size: 1.35rem;
+	  font-weight: 800;
+	  color: #111827;
+	  letter-spacing: -0.02em;
+	}
+
+	.dealership-tagline {
+	  display: inline-block;
+	  font-size: 0.82rem;
+	  font-weight: 600;
+	  color: #4b5563;
+	  text-transform: uppercase;
+	  letter-spacing: 0.08em;
+	  margin-top: 3px;
+	}
   </style>
 </head>
 <body>
   <div class="card" id="mainCard">
+  <!-- Dealership Brand Header -->
+	<div class="brand-header">
+	  <img src="./logo.png" alt="Sree Tulasi TVS" class="brand-logo">
+	  <div class="brand-details">
+		<h1 class="dealership-name">Sree Tulasi TVS</h1>
+		<span class="dealership-tagline">Authorized Main Dealer</span>
+	  </div>
+	</div>
     <h2>Book Vehicle Service</h2>
     
     <label for="serviceCenter">1. Select Service Center</label>
