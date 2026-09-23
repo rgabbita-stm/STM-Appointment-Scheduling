@@ -259,6 +259,28 @@
         btn.disabled = false;
       });
     }
+	window.addEventListener('DOMContentLoaded', () => {
+	  const params = new URLSearchParams(window.location.search);
+	  const phone = params.get('phone') || params.get('mobile') || '';
+
+	  if (phone) {
+		// Auto-fill phone field
+		const phoneInput = document.getElementById('phone');
+		if (phoneInput) {
+		  phoneInput.value = phone;
+		}
+
+		// Ping Apps Script backend to log the page view
+		fetch(SCRIPT_URL, {
+		  method: 'POST',
+		  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+		  body: JSON.stringify({
+			action: "trackLeadOpen",
+			phone: phone
+		  })
+		}).catch(err => console.log("Lead tracker ping failed:", err));
+	  }
+	});
   </script>
 </body>
 </html>
