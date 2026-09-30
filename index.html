@@ -92,7 +92,6 @@
       color: #ffffff !important;
       border-color: #00366b !important;
     }
-    /* Greyed out / Unavailable Slot Styling */
     .slot-btn.disabled {
       background: #f0f2f5;
       border: 1px solid #dcdfe3;
@@ -137,7 +136,6 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Dealership Header Styling */
     .brand-header {
       display: flex;
       flex-direction: column;
@@ -175,7 +173,6 @@
 </head>
 <body>
   <div class="card" id="mainCard">
-    <!-- Dealership Brand Header -->
     <div class="brand-header">
       <img src="./logo.png" alt="Sree Tulasi TVS" class="brand-logo">
       <div class="brand-details">
@@ -200,8 +197,8 @@
       <option value="">-- Choose Branch --</option>
     </select>
 
-    <!-- 3. Date Selection -->
-    <label for="bookingDate">3. Select Date</label>
+    <!-- 3. Date Selection (Strictly 3 Weeks Range) -->
+    <label for="bookingDate">3. Select Date (Up to 3 weeks in advance)</label>
     <input type="date" id="bookingDate" onchange="fetchAvailableSlots()">
 
     <!-- 4. Dynamic Time Slot Section -->
@@ -246,10 +243,18 @@
     ];
 
     window.addEventListener('DOMContentLoaded', () => {
-      const today = new Date().toISOString().split('T')[0];
+      // Configure 3-week date window (Today -> Today + 21 days)
+      const now = new Date();
+      const todayStr = formatDateYMD(now);
+      
+      const maxDate = new Date();
+      maxDate.setDate(now.getDate() + 21);
+      const maxDateStr = formatDateYMD(maxDate);
+
       const dateInput = document.getElementById('bookingDate');
-      dateInput.min = today;
-      dateInput.value = today;
+      dateInput.min = todayStr;
+      dateInput.max = maxDateStr;
+      dateInput.value = todayStr;
 
       const params = new URLSearchParams(window.location.search);
       const phone = params.get('phone') || params.get('mobile') || '';
@@ -270,6 +275,13 @@
         }).catch(err => console.log("Lead tracker ping failed:", err));
       }
     });
+
+    function formatDateYMD(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
 
     function onVehicleTypeChange() {
       const vehicleType = document.getElementById('vehicleType').value;
@@ -365,7 +377,6 @@
             btn.className = 'slot-btn';
             btn.innerText = slot.timeString;
 
-            // Render available vs greyed out/unavailable
             if (!slot.available) {
               btn.classList.add('disabled');
               btn.title = "Slot Unavailable";
