@@ -3,94 +3,202 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Service Appointment Booking</title>
+  <title>Service Appointment Booking - Sree Tulasi TVS</title>
 
   <!-- Favicon / Tab Logo -->
   <link rel="icon" type="image/png" href="./logo.png">
   <link rel="apple-touch-icon" href="./logo.png">
+
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #f0f2f5; margin: 0; padding: 14px; color: #1c1e21; }
-    .card { max-width: 480px; margin: 10px auto; background: #ffffff; padding: 22px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-    h2 { margin: 0 0 16px 0; font-size: 1.25rem; color: #004b93; text-align: center; }
-    label { font-weight: 600; font-size: 0.82rem; display: block; margin-top: 14px; margin-bottom: 5px; color: #333; }
-    input, select { width: 100%; padding: 10px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 0.92rem; background: #fff; }
-    input:focus, select:focus { border-color: #004b93; outline: none; }
-    .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; max-height: 220px; overflow-y: auto; padding: 4px; border: 1px solid #eee; border-radius: 6px; }
-    .slot-btn { background: #e7f0fa; border: 1px solid #004b93; color: #004b93; padding: 8px 2px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600; text-align: center; }
-    .slot-btn.selected { background: #004b93; color: #ffffff; }
-    .submit-btn { width: 100%; background: #008a3e; color: #ffffff; border: none; padding: 12px; border-radius: 6px; font-size: 0.98rem; font-weight: 700; cursor: pointer; margin-top: 20px; }
-    .submit-btn:disabled { background: #a8a8a8; cursor: not-allowed; }
-    #status { margin-top: 12px; text-align: center; font-size: 0.88rem; }
-    .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid #ccd0d5; border-top-color: #004b93; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-	/* Dealership Header Styling */
-	.brand-header {
-	  display: flex;
-	  flex-direction: column;
-	  align-items: center;
-	  justify-content: center;
-	  text-align: center;
-	  margin-bottom: 24px;
-	  padding-bottom: 18px;
-	  border-bottom: 1px solid #e5e7eb;
-	}
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background: #f0f2f5;
+      margin: 0;
+      padding: 14px;
+      color: #1c1e21;
+    }
+    .card {
+      max-width: 480px;
+      margin: 10px auto;
+      background: #ffffff;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin: 0 0 16px 0;
+      font-size: 1.25rem;
+      color: #004b93;
+      text-align: center;
+    }
+    label {
+      font-weight: 600;
+      font-size: 0.82rem;
+      display: block;
+      margin-top: 14px;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccd0d5;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      background: #fff;
+    }
+    input:focus, select:focus {
+      border-color: #004b93;
+      outline: none;
+    }
+    select:disabled {
+      background: #f5f6f7;
+      cursor: not-allowed;
+      color: #8d949e;
+    }
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 4px;
+      border: 1px solid #eee;
+      border-radius: 6px;
+    }
+    .slot-btn {
+      background: #e7f0fa;
+      border: 1px solid #004b93;
+      color: #004b93;
+      padding: 8px 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .slot-btn:hover {
+      background: #d0e3f7;
+    }
+    .slot-btn.selected {
+      background: #004b93;
+      color: #ffffff;
+    }
+    .submit-btn {
+      width: 100%;
+      background: #008a3e;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .submit-btn:disabled {
+      background: #a8a8a8;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 0.88rem;
+    }
+    .spinner {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      border: 2px solid #ccd0d5;
+      border-top-color: #004b93;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-	.brand-logo {
-	  height: 60px;
-	  width: auto;
-	  max-width: 180px;
-	  object-fit: contain;
-	  margin-bottom: 10px;
-	}
-
-	.dealership-name {
-	  margin: 0;
-	  font-size: 1.35rem;
-	  font-weight: 800;
-	  color: #111827;
-	  letter-spacing: -0.02em;
-	}
-
-	.dealership-tagline {
-	  display: inline-block;
-	  font-size: 0.82rem;
-	  font-weight: 600;
-	  color: #4b5563;
-	  text-transform: uppercase;
-	  letter-spacing: 0.08em;
-	  margin-top: 3px;
-	}
+    /* Dealership Brand Header */
+    .brand-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .brand-logo {
+      height: 60px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+    .dealership-name {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.02em;
+    }
+    .dealership-tagline {
+      display: inline-block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 3px;
+    }
   </style>
 </head>
 <body>
   <div class="card" id="mainCard">
-  <!-- Dealership Brand Header -->
-	<div class="brand-header">
-	  <img src="./logo.png" alt="Sree Tulasi TVS" class="brand-logo">
-	  <div class="brand-details">
-		<h1 class="dealership-name">Sree Tulasi TVS</h1>
-		<span class="dealership-tagline">Authorized Main Dealer</span>
-	  </div>
-	</div>
+    <!-- Dealership Brand Header -->
+    <div class="brand-header">
+      <img src="./logo.png" alt="Sree Tulasi TVS" class="brand-logo">
+      <div class="brand-details">
+        <h1 class="dealership-name">Sree Tulasi TVS</h1>
+        <span class="dealership-tagline">Authorized Main Dealer</span>
+      </div>
+    </div>
+
     <h2>Book Vehicle Service</h2>
     
-    <label for="serviceCenter">1. Select Service Center</label>
-    <select id="serviceCenter" onchange="fetchAvailableSlots()">
-      <option value="">-- Choose Branch --</option>
-      <option value="Dr. A S Rao Nagar">Dr. A S Rao Nagar</option>
-      <option value="Moula-Ali">Moula-Ali</option>
-      <option value="Nagaram">Nagaram</option>
+    <!-- 1. Vehicle Type Selection -->
+    <label for="vehicleType">1. Select Vehicle Type</label>
+    <select id="vehicleType" onchange="onVehicleTypeChange()">
+      <option value="">-- Choose Fuel Type --</option>
+      <option value="Petrol">Petrol</option>
+      <option value="Electric">Electric</option>
     </select>
 
-    <label for="bookingDate">2. Select Date</label>
+    <!-- 2. Service Center Selection -->
+    <label for="serviceCenter">2. Select Service Center</label>
+    <select id="serviceCenter" onchange="fetchAvailableSlots()" disabled>
+      <option value="">-- Choose Branch --</option>
+    </select>
+
+    <!-- 3. Date Selection -->
+    <label for="bookingDate">3. Select Date</label>
     <input type="date" id="bookingDate" onchange="fetchAvailableSlots()">
 
+    <!-- 4. Dynamic Time Slot Section -->
     <div id="slotsSection" style="display:none;">
-      <label>3. Select Time Slot</label>
+      <label>4. Select Time Slot (9:00 AM - 1:00 PM)</label>
       <div id="slotContainer" class="slot-grid"></div>
     </div>
 
+    <!-- 5. Customer Details Section -->
     <div id="detailsSection" style="display:none;">
       <label for="custName">Customer Name</label>
       <input type="text" id="custName" placeholder="Full name" required>
@@ -102,7 +210,7 @@
       <input type="email" id="custEmail" placeholder="name@example.com" required>
 
       <label for="vehicleName">Vehicle Name / Model</label>
-      <input type="text" id="vehicleName" placeholder="e.g. Jupiter, Raider, Apache, nTorq" required>
+      <input type="text" id="vehicleName" placeholder="e.g. Jupiter, Apache, Raider, iQube" required>
 
       <label for="vehicleRegNo">Vehicle Registration Number</label>
       <input type="text" id="vehicleRegNo" placeholder="e.g. TS 08 AB 1234" required>
@@ -114,21 +222,100 @@
   </div>
 
   <script>
-    // PASTE YOUR GOOGLE APPS SCRIPT EXEC URL HERE
+    // GOOGLE APPS SCRIPT EXEC URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1vAtGC_-S7nQYjE5t8UQKiksu28KJnK5S57YR-z3lSUXmKm-ifaukob46rjj0j1_y/exec";
 
     let selectedSlot = null;
 
-    // Set today's date in date picker on load (does NOT trigger any network request)
+    // Showroom branch configurations
+    const BRANCHES = [
+      { name: "Dr. A S Rao Nagar", allowsElectric: true },
+      { name: "Moula-Ali", allowsElectric: true },
+      { name: "Nagaram", allowsElectric: false }
+    ];
+
+    // Page initialization
     window.addEventListener('DOMContentLoaded', () => {
       const today = new Date().toISOString().split('T')[0];
       const dateInput = document.getElementById('bookingDate');
       dateInput.min = today;
       dateInput.value = today;
+
+      // URL parameters check for prefilling and tracking
+      const params = new URLSearchParams(window.location.search);
+      const phone = params.get('phone') || params.get('mobile') || '';
+
+      if (phone) {
+        const phoneInput = document.getElementById('custPhone');
+        if (phoneInput) {
+          phoneInput.value = phone;
+        }
+
+        // Background ping to Apps Script to log campaign link clicks
+        fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: "trackLeadOpen",
+            phone: phone
+          })
+        }).catch(err => console.log("Lead tracker ping failed:", err));
+      }
     });
 
-    // Fetches slots ONLY when both Branch and Date are chosen
+    // Handle Vehicle Type changes
+    function onVehicleTypeChange() {
+      const vehicleType = document.getElementById('vehicleType').value;
+      const branchSelect = document.getElementById('serviceCenter');
+      const previousBranch = branchSelect.value;
+
+      branchSelect.innerHTML = '<option value="">-- Choose Branch --</option>';
+
+      if (!vehicleType) {
+        branchSelect.disabled = true;
+        resetSlots();
+        return;
+      }
+
+      branchSelect.disabled = false;
+
+      // Filter: Nagaram is omitted if Electric is chosen
+      const availableBranches = BRANCHES.filter(b => {
+        if (vehicleType === "Electric") return b.allowsElectric;
+        return true;
+      });
+
+      let retainsSelection = false;
+      availableBranches.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.name;
+        opt.textContent = b.name;
+        if (b.name === previousBranch) {
+          opt.selected = true;
+          retainsSelection = true;
+        }
+        branchSelect.appendChild(opt);
+      });
+
+      // Reset slots if the prior selected branch is no longer available
+      if (!retainsSelection) {
+        branchSelect.value = "";
+        resetSlots();
+      } else {
+        fetchAvailableSlots();
+      }
+    }
+
+    function resetSlots() {
+      document.getElementById('slotsSection').style.display = 'none';
+      document.getElementById('detailsSection').style.display = 'none';
+      document.getElementById('status').innerHTML = '';
+      selectedSlot = null;
+    }
+
+    // Fetches slots from Apps Script backend
     function fetchAvailableSlots() {
+      const vehicleType = document.getElementById('vehicleType').value;
       const branch = document.getElementById('serviceCenter').value;
       const dateVal = document.getElementById('bookingDate').value;
       const container = document.getElementById('slotContainer');
@@ -136,11 +323,8 @@
       const slotsSection = document.getElementById('slotsSection');
       const detailsSection = document.getElementById('detailsSection');
 
-      // Do nothing until both are selected
-      if (!branch || !dateVal) {
-        slotsSection.style.display = 'none';
-        detailsSection.style.display = 'none';
-        status.innerHTML = '';
+      if (!vehicleType || !branch || !dateVal) {
+        resetSlots();
         return;
       }
 
@@ -154,17 +338,21 @@
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         redirect: 'follow',
-        body: JSON.stringify({ action: "getSlots", dateString: dateVal, branch: branch })
+        body: JSON.stringify({ 
+          action: "getSlots", 
+          dateString: dateVal, 
+          branch: branch,
+          vehicleType: vehicleType
+        })
       })
       .then(res => res.text())
       .then(text => {
-        // Safe parse check
         try {
           const res = JSON.parse(text);
           status.innerHTML = '';
 
           if (!res.success || !res.slots || res.slots.length === 0) {
-            container.innerHTML = '<div style="grid-column: span 4; color: #c62828; font-size: 0.85rem; text-align: center; padding: 8px;">No slots available on this date.</div>';
+            container.innerHTML = '<div style="grid-column: span 4; color: #c62828; font-size: 0.85rem; text-align: center; padding: 8px;">No slots available on this date between 9:00 AM and 1:00 PM.</div>';
             return;
           }
 
@@ -181,7 +369,6 @@
             container.appendChild(btn);
           });
         } catch (e) {
-          // If Google still sends HTML instead of JSON, print the readable error
           status.innerHTML = '<span style="color:#c62828">Backend error. Please verify Apps Script deployment permissions.</span>';
           console.error("Non-JSON output from backend:", text);
         }
@@ -193,6 +380,7 @@
 
     // Handles form submission
     function submitBooking() {
+      const vehicleType = document.getElementById('vehicleType').value;
       const branch = document.getElementById('serviceCenter').value;
       const name = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
@@ -203,8 +391,8 @@
       const status = document.getElementById('status');
       const btn = document.getElementById('submitBtn');
 
-      if (!branch || !name || !phone || !email || !vehicle || !regNo || !selectedSlot) {
-        alert('Please fill in all details and pick a slot.');
+      if (!vehicleType || !branch || !name || !phone || !email || !vehicle || !regNo || !selectedSlot) {
+        alert('Please fill in all details and pick an appointment slot.');
         return;
       }
 
@@ -215,6 +403,7 @@
         name: name,
         phone: phone,
         email: email,
+        vehicleType: vehicleType,
         vehicleName: vehicle,
         vehicleRegNo: regNo,
         serviceCenter: branch,
@@ -241,9 +430,9 @@
                 <div style="font-size: 1.15rem; font-weight: 800; color: #1b5e20;">${res.bookingId}</div>
               </div>
               <p>Thank you, <b>${name}</b>.</p>
-              <p><b>Vehicle:</b> ${vehicle} (${regNo})</p>
+              <p><b>Vehicle:</b> ${vehicle} (${regNo}) - <i>${vehicleType}</i></p>
               <p><b>Service Center:</b> ${branch}</p>
-              <p><b>Slot:</b> ${dateVal} at ${selectedSlot.timeString} (15 mins)</p>
+              <p><b>Slot:</b> ${dateVal} at ${selectedSlot.timeString}</p>
               <p style="font-size: 0.85rem; color: #555; margin-top: 12px;">A Google Calendar invitation has been sent to <b>${email}</b>.</p>
               <hr style="border:0; border-top:1px solid #eee; margin:16px 0;">
               <p style="font-size: 0.8rem; color: #777;">Need to cancel this booking?</p>
@@ -259,28 +448,6 @@
         btn.disabled = false;
       });
     }
-	window.addEventListener('DOMContentLoaded', () => {
-	  const params = new URLSearchParams(window.location.search);
-	  const phone = params.get('phone') || params.get('mobile') || '';
-
-	  if (phone) {
-		// Auto-fill phone field
-		const phoneInput = document.getElementById('phone');
-		if (phoneInput) {
-		  phoneInput.value = phone;
-		}
-
-		// Ping Apps Script backend to log the page view
-		fetch(SCRIPT_URL, {
-		  method: 'POST',
-		  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-		  body: JSON.stringify({
-			action: "trackLeadOpen",
-			phone: phone
-		  })
-		}).catch(err => console.log("Lead tracker ping failed:", err));
-	  }
-	});
   </script>
 </body>
 </html>
