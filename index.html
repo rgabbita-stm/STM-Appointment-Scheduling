@@ -64,11 +64,12 @@
       grid-template-columns: repeat(4, 1fr);
       gap: 6px;
       margin-top: 8px;
-      max-height: 220px;
+      max-height: 230px;
       overflow-y: auto;
-      padding: 4px;
+      padding: 6px;
       border: 1px solid #eee;
       border-radius: 6px;
+      background: #fafbfc;
     }
     .slot-btn {
       background: #e7f0fa;
@@ -80,14 +81,25 @@
       font-size: 0.75rem;
       font-weight: 600;
       text-align: center;
-      transition: background 0.2s, color 0.2s;
+      transition: background 0.15s, color 0.15s;
+      user-select: none;
     }
-    .slot-btn:hover {
+    .slot-btn:hover:not(.disabled) {
       background: #d0e3f7;
     }
     .slot-btn.selected {
-      background: #004b93;
-      color: #ffffff;
+      background: #004b93 !important;
+      color: #ffffff !important;
+      border-color: #00366b !important;
+    }
+    /* Greyed out / Unavailable Slot Styling */
+    .slot-btn.disabled {
+      background: #f0f2f5;
+      border: 1px solid #dcdfe3;
+      color: #a0a6b1;
+      cursor: not-allowed;
+      text-decoration: line-through;
+      box-shadow: none;
     }
     .submit-btn {
       width: 100%;
@@ -125,7 +137,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Dealership Brand Header */
+    /* Dealership Header Styling */
     .brand-header {
       display: flex;
       flex-direction: column;
@@ -227,21 +239,18 @@
 
     let selectedSlot = null;
 
-    // Showroom branch configurations
     const BRANCHES = [
       { name: "Dr. A S Rao Nagar", allowsElectric: true },
       { name: "Moula-Ali", allowsElectric: true },
       { name: "Nagaram", allowsElectric: false }
     ];
 
-    // Page initialization
     window.addEventListener('DOMContentLoaded', () => {
       const today = new Date().toISOString().split('T')[0];
       const dateInput = document.getElementById('bookingDate');
       dateInput.min = today;
       dateInput.value = today;
 
-      // URL parameters check for prefilling and tracking
       const params = new URLSearchParams(window.location.search);
       const phone = params.get('phone') || params.get('mobile') || '';
 
@@ -251,7 +260,6 @@
           phoneInput.value = phone;
         }
 
-        // Background ping to Apps Script to log campaign link clicks
         fetch(SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -263,7 +271,6 @@
       }
     });
 
-    // Handle Vehicle Type changes
     function onVehicleTypeChange() {
       const vehicleType = document.getElementById('vehicleType').value;
       const branchSelect = document.getElementById('serviceCenter');
@@ -279,7 +286,6 @@
 
       branchSelect.disabled = false;
 
-      // Filter: Nagaram is omitted if Electric is chosen
       const availableBranches = BRANCHES.filter(b => {
         if (vehicleType === "Electric") return b.allowsElectric;
         return true;
@@ -297,7 +303,6 @@
         branchSelect.appendChild(opt);
       });
 
-      // Reset slots if the prior selected branch is no longer available
       if (!retainsSelection) {
         branchSelect.value = "";
         resetSlots();
@@ -313,7 +318,6 @@
       selectedSlot = null;
     }
 
-    // Fetches slots from Apps Script backend
     function fetchAvailableSlots() {
       const vehicleType = document.getElementById('vehicleType').value;
       const branch = document.getElementById('serviceCenter').value;
@@ -352,7 +356,7 @@
           status.innerHTML = '';
 
           if (!res.success || !res.slots || res.slots.length === 0) {
-            container.innerHTML = '<div style="grid-column: span 4; color: #c62828; font-size: 0.85rem; text-align: center; padding: 8px;">No slots available on this date between 9:00 AM and 1:00 PM.</div>';
+            container.innerHTML = '<div style="grid-column: span 4; color: #c62828; font-size: 0.85rem; text-align: center; padding: 8px;">No slots available on this date.</div>';
             return;
           }
 
@@ -360,12 +364,19 @@
             const btn = document.createElement('div');
             btn.className = 'slot-btn';
             btn.innerText = slot.timeString;
-            btn.onclick = function() {
-              document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
-              btn.classList.add('selected');
-              selectedSlot = slot;
-              detailsSection.style.display = 'block';
-            };
+
+            // Render available vs greyed out/unavailable
+            if (!slot.available) {
+              btn.classList.add('disabled');
+              btn.title = "Slot Unavailable";
+            } else {
+              btn.onclick = function() {
+                document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedSlot = slot;
+                detailsSection.style.display = 'block';
+              };
+            }
             container.appendChild(btn);
           });
         } catch (e) {
@@ -378,7 +389,6 @@
       });
     }
 
-    // Handles form submission
     function submitBooking() {
       const vehicleType = document.getElementById('vehicleType').value;
       const branch = document.getElementById('serviceCenter').value;
@@ -392,7 +402,7 @@
       const btn = document.getElementById('submitBtn');
 
       if (!vehicleType || !branch || !name || !phone || !email || !vehicle || !regNo || !selectedSlot) {
-        alert('Please fill in all details and pick an appointment slot.');
+        alert('Please fill in all details and pick an available appointment slot.');
         return;
       }
 
